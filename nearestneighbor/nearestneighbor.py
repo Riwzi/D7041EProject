@@ -45,15 +45,15 @@ class NearestNeighborClass(object):
             Ypred[i] = labels[count.argmax()]
             
             prediction = labels[count.argmax()]
-            if (prediction == '1'):
-                if (Y[i] == '1'):
+            if (prediction == 1):
+                if (Y[i] == 1):
                     # It was the correct user and he/she was accepted
                     pass
                 else:
                     # It was an incorrect user and he/she was accepted
                     FA += 1
             else:
-                if (Y[i] == '1'):
+                if (Y[i] == 1):
                     # it was the correct user and he/she was rejected
                     FR += 1
                 else:
