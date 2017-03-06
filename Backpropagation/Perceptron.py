@@ -198,7 +198,7 @@ class ReplicatorNeuralNet(MultiLayerPerceptron):
         # article uses either linear or sigmoid for output layer
         self.layers[4].activation = f_linear
 
-    def train(self, train_data, epochs):
+    def train(self, train_data, epochs, learning_rate):
         loss = np.array([])
         for i in range(1,epochs+1):
             epoch_loss = np.array([])
@@ -210,11 +210,11 @@ class ReplicatorNeuralNet(MultiLayerPerceptron):
             loss = np.append(loss, np.mean(epoch_loss))
         return losses
 
-    def train_once(self, train_data):
+    def train_once(self, train_data, learning_rate):
         output = self.forward_propagate(train_data)
         # the output is compared to the INPUT for training the RNN
         self.backpropagate(output, train_data)
-        self.update_weights(eta)
+        self.update_weights(learning_rate)
         # mean loss over the whole batch
         return np.mean(self.reconstruction_loss(train_data, output), axis=0)
 
@@ -222,7 +222,7 @@ class ReplicatorNeuralNet(MultiLayerPerceptron):
         # half square euclidean distance is used for reconstruction loss
         np.sum(np.square(net_output - net_input), axis=1)/2
 
-    def evaulate_outlier_thresholds(self, data, labels):
+    def evaluate_outlier_thresholds(self, data, labels):
         output = self.forward_propagate(data)
         outlier_factor = self.reconstruction_loss(data, output)
         assert(len(outlier_factor.shape) == 1)
