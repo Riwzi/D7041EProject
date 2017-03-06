@@ -188,13 +188,10 @@ class MultiLayerPerceptron(object):
             print out_str
 
 class ReplicatorNeuralNet(MultiLayerPerceptron):
-    # TODO should decide the outlier threshold through training... maybe take
-    # the desired balance of false acceptance and false rejection instead?
-    def __init__(self, layer_config, outlier_threshold, batch_size=100):
+    def __init__(self, layer_config, batch_size=100):
         assert(len(layer_config) == 5)
         assert(layer_config[0] == layer_config[-1])
         super(ReplicatorNeuralNet, self).__init__(layer_config, batch_size)
-        self.outlier_threshold = outlier_threshold
         self.layers[1].activation = f_tanh
         self.layers[2].activation = f_staircase
         self.layers[3].activation = f_tanh
@@ -218,29 +215,44 @@ class ReplicatorNeuralNet(MultiLayerPerceptron):
         # the output is compared to the INPUT for training the RNN
         self.backpropagate(output, train_data)
         self.update_weights(eta)
-        # TODO might be useful to report average reconstruction error
-        # TODO consider just simplifying it to use loss everywhere
-        # (half L2 distance) since it is the same up to a constant factor
         # mean loss over the whole batch
-        return np.mean(reconstruction_loss(train_data, output), axis=0)
+        return np.mean(self.reconstruction_loss(train_data, output), axis=0)
 
     def reconstruction_loss(self, net_input, net_output):
-        # feature_count = net_input.shape[1]
-        # half square reconstruction error
-        # TODO decide if we should use the mean. will just change all OF values
-        # by a constant factor 1/(feature count)
+        # half square euclidean distance is used for reconstruction loss
         np.sum(np.square(net_output - net_input), axis=1)/2
 
-    def decide_outlier_threshold(self, net_input, net_output=None):
-        if net_output == None:
-            net_output = self.forward_propagate(net_input)
-        outlier_factor = reconstruction_loss(net_input, net_output)
+    def evaulate_outlier_thresholds(self, data, labels):
+        output = self.forward_propagate(data)
+        outlier_factor = self.reconstruction_loss(data, output)
         assert(len(outlier_factor.shape) == 1)
-        outlier_factor.sort()
+        # sort and reverse so that first index is that of the element with
+        # biggest outlier factor
+        outlier_indices = np.argsort(outlier_factor)[::-1]
+        # correct user
+        positive_examples = np.sum(labels)
+        # incorrect user
+        negative_examples = positive_examples - labels.shape[0]
+        fa = negative_examples # number of false acceptances
+        fr = 0                 # number of false rejections
+        threshold = []
+        far = []
+        frr = []
+        for i in outlier_indices:
+            # label is 1 if it is the original user, 0 otherwise
+            if labels[i] == 1:
+                # lowering the threshold this far will reject
+                fr += 1
+            else:
+                fa -= 1
+            threshold.append(outlier_factor[i])
+            far.append(fa / float(negative_examples))
+            frr.append(fr / float(positive_examples))
+        return (threshold, far, frr)
 
     def find_outliers(self, net_input, net_output=None):
         if net_output == None:
             net_output = self.forward_propagate(net_input)
-        outlier_factor = reconstruction_loss(net_input, net_output)
+        outlier_factor = self.reconstruction_loss(net_input, net_output)
         outliers = np.where(outlier_factor > self.outlier_threshold, 1, 0)
         return outliers
