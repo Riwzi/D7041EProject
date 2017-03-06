@@ -6,6 +6,7 @@ Created on 28 feb. 2017
 import argparse
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 from nearestneighbor import *
 from Backpropagation import *
 
@@ -20,9 +21,8 @@ def parseArguments():
 #     parser.add_argument("valid", help="Size of the validation", type=int)
 #     parser.add_argument("test", help="Size of the test set", type=int)
     parser.add_argument("subject", help="Id string of the correct subject.", type=str)
-    
+
     # Optional Arguments
-    parser.add_argument("-file", help="Input file", type=str, default="DSL-StrongPasswordData.txt")
     parser.add_argument("-m", help="Method. 0 for KNN, 1 for RNN. Defaults to 0", type=int, default="0")
 
     # Parse arguments
@@ -36,7 +36,8 @@ correct_data, correct_labels, other_data, other_labels = [], [], [], []
 correct_subject = args.subject
 
 #Read all data of the correct user into a separate array. Easier to split the data this way (i think)
-text_file = open(args.file, 'r')
+filepath = os.path.join('data', 'DSL-StrongPasswordData.txt')
+text_file = open(filepath, 'r')
 text_file.next() #ignore the first line
 for line in text_file:
     x = line.split()
@@ -67,7 +68,7 @@ def cross_validation(data1, labels1, data2, labels2, neighbors, n=3):
     fold_size2 = len(data2)/n
     folds_data = []
     folds_labels = []
-    
+
     for i in range(n-1):
         data = np.concatenate((data1[fold_size1*i:fold_size1*(i+1)],data2[fold_size2*i:fold_size2*(i+1)]))
         folds_data.append(data)
@@ -78,7 +79,7 @@ def cross_validation(data1, labels1, data2, labels2, neighbors, n=3):
     folds_data.append(data)
     labels = np.concatenate((labels1[fold_size1*(n-1):], labels2[fold_size2*(n-1):]))
     folds_labels.append(labels)
-    
+
     cross_FAR = []
     cross_FRR = []
     cross_k = []
@@ -88,7 +89,7 @@ def cross_validation(data1, labels1, data2, labels2, neighbors, n=3):
         print ("K; ", k)
         cross_k.append(k)
         nn=NearestNeighborClass()
-        
+
         #Fold 2 is validation
         dat = np.concatenate((folds_data[0], folds_data[1]))
         lab = np.concatenate((folds_labels[0], folds_labels[1]))
@@ -98,7 +99,7 @@ def cross_validation(data1, labels1, data2, labels2, neighbors, n=3):
         FRR1 = float(FR)/fold_size1
         cross_FAR.append([k, FAR1])
         cross_FRR.append([k, FRR1])
-        
+
         #Fold 0 is validation
         dat = np.concatenate((folds_data[1], folds_data[2]))
         lab = np.concatenate((folds_labels[1], folds_labels[2]))
@@ -108,7 +109,7 @@ def cross_validation(data1, labels1, data2, labels2, neighbors, n=3):
         FRR2 = float(FR)/fold_size1
         cross_FAR.append([k, FAR2])
         cross_FRR.append([k, FRR2])
-        
+
         #Fold 1 is validation
         dat = np.concatenate((folds_data[0], folds_data[2]))
         lab = np.concatenate((folds_labels[0], folds_labels[2]))
@@ -118,7 +119,7 @@ def cross_validation(data1, labels1, data2, labels2, neighbors, n=3):
         FRR3 = float(FR)/fold_size1
         cross_FAR.append([k, FAR3])
         cross_FRR.append([k, FRR3])
-        
+
         FAR = (FAR1+FAR2+FAR3)/3
         FRR = (FRR1+FRR2+FRR3)/3
         cross_FAR_avg.append(FAR)
@@ -127,7 +128,7 @@ def cross_validation(data1, labels1, data2, labels2, neighbors, n=3):
 
 
 def prepare_for_backprop(batch_size, Train_data, Train_labels, Valid_data, Valid_labels):
-    
+
     print "Creating data..."
     batched_train_data, batched_train_labels = util.create_batches(Train_data, Train_labels,
                                               batch_size,
@@ -154,7 +155,7 @@ if args.m==0: #Cross validation with knn
     print FAR_avg
     print FRR
     print FRR_avg
-    
+
     plt.plot(neighbors, FRR_avg, label="FRR")
     plt.plot(neighbors, FAR_avg, label="FAR")
     plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
@@ -162,24 +163,24 @@ if args.m==0: #Cross validation with knn
     plt.xlabel("k")
     plt.title("k-Nearest Neighbors")
     plt.show()
-    
+
 elif args.m==1: #MLP anomaly detection
     Train_data = np.concatenate((correct_data[:300], other_data[:15000]))
     Train_labels =np.concatenate((correct_labels[:300], other_labels[:15000]))
     Valid_data = np.concatenate((correct_data[300:], other_data[15000:]))
     Valid_labels = np.concatenate((correct_labels[300:], other_labels[15000:]))
-    
+
     #Convert labels to ints instead of strings because utilities kept complaining. Does it matter? idk
     Train_labels = np.array(map(int, Train_labels))
     Valid_labels = np.array(map(int, Train_labels))
-    
+
     batch_size=100;
     train_data, train_labels, valid_data, valid_labels=prepare_for_backprop(batch_size, Train_data, Train_labels, Valid_data, Valid_labels)
-    
+
     mlp = MultiLayerPerceptron(layer_config=[31, 100, 100, 2], batch_size=batch_size)
-        
+
     mlp.evaluate(train_data, train_labels, valid_data, valid_labels, eval_train=True)
-    
+
     print("Done:)\n")
 
 else:

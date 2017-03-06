@@ -231,8 +231,15 @@ class ReplicatorNeuralNet(MultiLayerPerceptron):
         # by a constant factor 1/(feature count)
         np.sum(np.square(net_output - net_input), axis=1)/2
 
+    def decide_outlier_threshold(self, net_input, net_output=None):
+        if net_output == None:
+            net_output = self.forward_propagate(net_input)
+        outlier_factor = reconstruction_loss(net_input, net_output)
+        assert(len(outlier_factor.shape) == 1)
+        outlier_factor.sort()
+
     def find_outliers(self, net_input, net_output=None):
-        if net_output=None:
+        if net_output == None:
             net_output = self.forward_propagate(net_input)
         outlier_factor = reconstruction_loss(net_input, net_output)
         outliers = np.where(outlier_factor > self.outlier_threshold, 1, 0)

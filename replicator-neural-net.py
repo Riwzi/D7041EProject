@@ -6,11 +6,8 @@ import matplotlib.pyplot as plt
 from NearestNeighbor import *
 from Backpropagation import *
 
-print("Hello World:)\n")
 ds=DataSet()
 util=Utilities()
-
-util.test()
 
 Train, Valid, Test = ds.load_MNIST()
 Train_images=Train[0]
@@ -44,5 +41,3 @@ plt.xlabel("epoch")
 plt.ylabel("reconstruction loss")
 plt.title("Replicator neural network training")
 plt.show()
-# mlp.evaluate(train_data, train_labels, valid_data, valid_labels,
-            #  eval_train=True)
