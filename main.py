@@ -60,6 +60,17 @@ other_labels = np.array(other_labels)
 correct_labels = np.ones(correct_labels.shape, dtype=np.int)
 other_labels = np.zeros(other_labels.shape, dtype=np.int)
 
+#Combines the data/labels. number_correct and number_other defines how many elements of each array will be in the final arrays.
+def combine(correct_data, correct_labels, other_data, other_labels, number_correct, number_other):
+    data = np.concatenate((correct_data[:number_correct], other_data[:number_correct]))
+    labels = np.concatenate((correct_labels[:number_correct], other_labels[:number_correct]))
+    return data, labels
+
+#Shuffles two related arrays, preserving their correspondences.
+def shuffle(data, labels):
+    p = np.random.permutation(len(data))
+    return data[p], labels[p]
+
 util=Utilities()
 def prepare_for_backprop(batch_size, Train_data, Train_labels, Valid_data, Valid_labels):
     print "Creating data..."
@@ -107,5 +118,10 @@ elif args.m==1: #MLP anomaly detection
 
     print("Done:)\n")
 
+elif args.m==2: #Replicator neural net
+    #setup stuffs for replicator neural nets here.
+    pass
+    
+    
 else:
     pass
