@@ -3,7 +3,7 @@ Created on 6 mars 2017
 
 @author: Rickard
 '''
-from NearestNeighbor import *
+from nearestneighbor import *
 
 def cross_validation(data1, labels1, data2, labels2, neighbors, n=3):
     n=3

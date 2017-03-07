@@ -7,7 +7,7 @@ import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-from NearestNeighbor import *
+from nearestneighbor import *
 from Backpropagation import *
 from cross_validation import cross_validation
 
@@ -131,7 +131,6 @@ elif args.m==2: #Replicator neural net
     
     #All data is unbatched. prepare_for_backdrop/util.create_batches is available to use if you want to batch it.
     #setup stuffs for Replicator neural nets here
-    #ta typ saker från ditt script
     
     pass
 else:
