@@ -203,12 +203,12 @@ class ReplicatorNeuralNet(MultiLayerPerceptron):
         for i in range(1,epochs+1):
             epoch_loss = np.array([])
             for batch_data in train_data:
-                batch_loss = train_once(batch_data)
+                batch_loss = self.train_once(batch_data, learning_rate)
                 # store mean loss for each epoch so we can plot it
                 epoch_loss = np.append(epoch_loss, batch_loss)
                 # TODO log it
             loss = np.append(loss, np.mean(epoch_loss))
-        return losses
+        return loss
 
     def train_once(self, train_data, learning_rate):
         output = self.forward_propagate(train_data)
@@ -220,7 +220,7 @@ class ReplicatorNeuralNet(MultiLayerPerceptron):
 
     def reconstruction_loss(self, net_input, net_output):
         # half square euclidean distance is used for reconstruction loss
-        np.sum(np.square(net_output - net_input), axis=1)/2
+        return np.sum(np.square(net_output - net_input), axis=1)/2
 
     def evaluate_outlier_thresholds(self, data, labels):
         output = self.forward_propagate(data)

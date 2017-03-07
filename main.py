@@ -130,10 +130,9 @@ elif args.m==2: #Replicator neural net
     # unbatched
     train_data, train_labels, valid_data, valid_labels = prepare_data(correct_data, correct_labels, other_data, other_labels, number_correct, number_other)
     batch_size=100;
-    batched_data, batched_labels = util.create_batches(train_data, train_labels, batch_size,
-                                                       create_bit_vector=True)
+    batch_train_data, batch_train_labels = util.create_batches(train_data, train_labels, batch_size, create_bit_vector=True)
     rnn = ReplicatorNeuralNet(layer_config=[31, 15, 15, 15, 31], batch_size=batch_size)
-    loss = rnn.train(batched_data)
+    loss = rnn.train(batch_train_data, epochs=70, learning_rate=0.05)
 
     plt.plot(loss)
     plt.xlabel("epoch")
