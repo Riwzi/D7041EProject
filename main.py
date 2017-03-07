@@ -63,7 +63,7 @@ def prepare_data(correct_data, correct_labels, other_data, other_labels, n, m):
     #First shuffle the data
     correct_data, correct_labels = shuffle(correct_data, correct_labels)
     other_data, other_labels = shuffle(other_data, other_labels)
-    
+
     #Pick the first n keystrokes of the correct user and the first m keystrokes of incorrect users as the train keystrokes. The rest is validation keystrokes
     train_data = np.concatenate((correct_data[:n], other_data[:m]))
     train_labels = np.concatenate((correct_labels[:n], other_labels[:m]))
@@ -120,7 +120,7 @@ elif args.m==1: #MLP anomaly detection
 
     batch_size=100;
     train_data, train_labels, valid_data, valid_labels=prepare_for_backprop(batch_size, Train_data, Train_labels, Valid_data, Valid_labels)
-    
+
     mlp = MultiLayerPerceptron(layer_config=[31, 100, 100, 2], batch_size=batch_size)
 
     mlp.evaluate(train_data, train_labels, valid_data, valid_labels, eval_train=True)
@@ -128,14 +128,29 @@ elif args.m==1: #MLP anomaly detection
     print("Done:)\n")
 
 elif args.m==2: #Replicator neural net
-    #The Number of correct/incorrect users in the training data
+    # The Number of correct/incorrect users in the training data
     number_correct = args.train_correct
     number_other = args.train_other
+    # unbatched
     train_data, train_labels, valid_data, valid_labels = prepare_data(correct_data, correct_labels, other_data, other_labels, number_correct, number_other)
-    
-    #All data is unbatched. prepare_for_backdrop/util.create_batches is available to use if you want to batch it.
-    #setup stuffs for Replicator neural nets here
-    
-    pass
+    batch_size=100;
+    batch_train_data, batch_train_labels = util.create_batches(train_data, train_labels, batch_size, create_bit_vector=True)
+    rnn = ReplicatorNeuralNet(layer_config=[31, 15, 15, 15, 31], batch_size=batch_size)
+    loss = rnn.train(batch_train_data, epochs=70, learning_rate=0.01)
+
+    plt.plot(loss, '.')
+    plt.xlabel("epoch")
+    plt.ylabel("reconstruction loss")
+    plt.title("Replicator neural network training")
+    plt.show()
+
+    thresholds, far, frr = rnn.evaluate_outlier_thresholds(valid_data, valid_labels)
+    # TODO make the plot nicer
+    plt.plot(thresholds, far, label='FAR')
+    plt.plot(thresholds, frr, label='FRR')
+    plt.xlabel("threshold")
+    plt.ylabel("rate")
+    plt.title("Replicator neural network FAR/FRR")
+    plt.show()
 else:
     pass

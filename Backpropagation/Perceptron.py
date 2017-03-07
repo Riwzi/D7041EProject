@@ -203,12 +203,12 @@ class ReplicatorNeuralNet(MultiLayerPerceptron):
         for i in range(1,epochs+1):
             epoch_loss = np.array([])
             for batch_data in train_data:
-                batch_loss = train_once(batch_data)
+                batch_loss = self.train_once(batch_data, learning_rate)
                 # store mean loss for each epoch so we can plot it
                 epoch_loss = np.append(epoch_loss, batch_loss)
                 # TODO log it
             loss = np.append(loss, np.mean(epoch_loss))
-        return losses
+        return loss
 
     def train_once(self, train_data, learning_rate):
         output = self.forward_propagate(train_data)
@@ -220,7 +220,7 @@ class ReplicatorNeuralNet(MultiLayerPerceptron):
 
     def reconstruction_loss(self, net_input, net_output):
         # half square euclidean distance is used for reconstruction loss
-        np.sum(np.square(net_output - net_input), axis=1)/2
+        return np.sum(np.square(net_output - net_input), axis=1)/2
 
     def evaluate_outlier_thresholds(self, data, labels):
         output = self.forward_propagate(data)
@@ -231,8 +231,10 @@ class ReplicatorNeuralNet(MultiLayerPerceptron):
         outlier_indices = np.argsort(outlier_factor)[::-1]
         # correct user
         positive_examples = np.sum(labels)
+        print "{} positive examples".format(positive_examples)
         # incorrect user
-        negative_examples = positive_examples - labels.shape[0]
+        negative_examples = labels.shape[0] - positive_examples
+        print "{} negative examples".format(negative_examples)
         fa = negative_examples # number of false acceptances
         fr = 0                 # number of false rejections
         threshold = []
@@ -245,6 +247,8 @@ class ReplicatorNeuralNet(MultiLayerPerceptron):
                 fr += 1
             else:
                 fa -= 1
+            if fr == fa:
+                print "equal errors when threshold is {}\nfar=frr={}".format(outlier_factor[i], fa / float(negative_examples))
             threshold.append(outlier_factor[i])
             far.append(fa / float(negative_examples))
             frr.append(fr / float(positive_examples))
