@@ -231,8 +231,10 @@ class ReplicatorNeuralNet(MultiLayerPerceptron):
         outlier_indices = np.argsort(outlier_factor)[::-1]
         # correct user
         positive_examples = np.sum(labels)
+        print "{} positive examples".format(positive_examples)
         # incorrect user
-        negative_examples = positive_examples - labels.shape[0]
+        negative_examples = labels.shape[0] - positive_examples
+        print "{} negative examples".format(negative_examples)
         fa = negative_examples # number of false acceptances
         fr = 0                 # number of false rejections
         threshold = []
@@ -245,6 +247,8 @@ class ReplicatorNeuralNet(MultiLayerPerceptron):
                 fr += 1
             else:
                 fa -= 1
+            if fr == fa:
+                print "equal errors when threshold is {}\nfar=frr={}".format(outlier_factor[i], fa / float(negative_examples))
             threshold.append(outlier_factor[i])
             far.append(fa / float(negative_examples))
             frr.append(fr / float(positive_examples))

@@ -132,9 +132,9 @@ elif args.m==2: #Replicator neural net
     batch_size=100;
     batch_train_data, batch_train_labels = util.create_batches(train_data, train_labels, batch_size, create_bit_vector=True)
     rnn = ReplicatorNeuralNet(layer_config=[31, 15, 15, 15, 31], batch_size=batch_size)
-    loss = rnn.train(batch_train_data, epochs=70, learning_rate=0.05)
+    loss = rnn.train(batch_train_data, epochs=70, learning_rate=0.01)
 
-    plt.plot(loss)
+    plt.plot(loss, '.')
     plt.xlabel("epoch")
     plt.ylabel("reconstruction loss")
     plt.title("Replicator neural network training")
@@ -142,8 +142,8 @@ elif args.m==2: #Replicator neural net
 
     thresholds, far, frr = rnn.evaluate_outlier_thresholds(valid_data, valid_labels)
     # TODO make the plot nicer
-    plt.plot(thresholds, far, 'x')
-    plt.plot(thresholds, frr, '.')
+    plt.plot(thresholds, far, label='FAR')
+    plt.plot(thresholds, frr, label='FRR')
     plt.xlabel("threshold")
     plt.ylabel("rate")
     plt.title("Replicator neural network FAR/FRR")
