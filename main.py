@@ -16,13 +16,12 @@ def parseArguments():
     parser = argparse.ArgumentParser()
 
     # Positional mandatory arguments
-#     parser.add_argument("train", help="Size of the training set", type=int) #these 3 doesn't do anything right now
-#     parser.add_argument("valid", help="Size of the validation", type=int)
-#     parser.add_argument("test", help="Size of the test set", type=int)
+    parser.add_argument("train_correct", help="Number of correct user keystrokes in the training data", type=int)
+    parser.add_argument("train_other", help="Number of other users keystrokes in the training data", type=int)
     parser.add_argument("subject", help="Id string of the correct subject.", type=str)
 
     # Optional Arguments
-    parser.add_argument("-m", help="Method. 0 for KNN, 1 for RNN. Defaults to 0", type=int, default="0")
+    parser.add_argument("-m", help="Method. 0 for KNN, 1 for MLP, 2 for RNN. Defaults to 0", type=int, default="0")
 
     # Parse arguments
     args = parser.parse_args()
@@ -60,11 +59,17 @@ other_labels = np.array(other_labels)
 correct_labels = np.ones(correct_labels.shape, dtype=np.int)
 other_labels = np.zeros(other_labels.shape, dtype=np.int)
 
-#Combines the data/labels. number_correct and number_other defines how many elements of each array will be in the final arrays.
-def combine(correct_data, correct_labels, other_data, other_labels, number_correct, number_other):
-    data = np.concatenate((correct_data[:number_correct], other_data[:number_correct]))
-    labels = np.concatenate((correct_labels[:number_correct], other_labels[:number_correct]))
-    return data, labels
+def prepare_data(correct_data, correct_labels, other_data, other_labels, n, m):
+    #First shuffle the data
+    correct_data, correct_labels = shuffle(correct_data, correct_labels)
+    other_data, other_labels = shuffle(other_data, other_labels)
+
+    #Pick the first n keystrokes of the correct user and the first m keystrokes of incorrect users as the train keystrokes. The rest is validation keystrokes
+    train_data = np.concatenate((correct_data[:n], other_data[:m]))
+    train_labels = np.concatenate((correct_labels[:n], other_labels[:m]))
+    valid_data = np.concatenate((correct_data[n:], other_data[m:]))
+    valid_labels = np.concatenate((correct_labels[n:], other_labels[m:]))
+    return train_data, train_labels, valid_data, valid_labels
 
 #Shuffles two related arrays, preserving their correspondences.
 def shuffle(data, labels):
@@ -119,11 +124,16 @@ elif args.m==1: #MLP anomaly detection
     print("Done:)\n")
 
 elif args.m==2: #Replicator neural net
+    # The Number of correct/incorrect users in the training data
+    number_correct = args.train_correct
+    number_other = args.train_other
+    # unbatched
+    train_data, train_labels, valid_data, valid_labels = prepare_data(correct_data, correct_labels, other_data, other_labels, number_correct, number_other)
     batch_size=100;
-    batched_data, batched_labels = util.create_batches(data, labels, batch_size,
+    batched_data, batched_labels = util.create_batches(train_data, train_labels, batch_size,
                                                        create_bit_vector=True)
     rnn = ReplicatorNeuralNet(layer_config=[31, 15, 15, 15, 31], batch_size=batch_size)
-    loss = rnn.train(train_data)
+    loss = rnn.train(batched_data)
 
     plt.plot(loss)
     plt.xlabel("epoch")
@@ -131,8 +141,7 @@ elif args.m==2: #Replicator neural net
     plt.title("Replicator neural network training")
     plt.show()
 
-    # TODO use more data for evaluation?
-    thresholds, far, frr = rnn.evaluate_outlier_thresholds(data, labels)
+    thresholds, far, frr = rnn.evaluate_outlier_thresholds(valid_data, valid_labels)
     # TODO make the plot nicer
     plt.plot(thresholds, far, 'x')
     plt.plot(thresholds, frr, '.')
@@ -140,6 +149,5 @@ elif args.m==2: #Replicator neural net
     plt.ylabel("rate")
     plt.title("Replicator neural network FAR/FRR")
     plt.show()
-
 else:
     pass
