@@ -92,13 +92,15 @@ def prepare_for_backprop(batch_size, Train_data, Train_labels, Valid_data, Valid
 
 
 if args.m==0: #Cross validation with knn
-    cross_correct_data = correct_data[:300]
-    cross_correct_labels = correct_labels[:300]
-    cross_other_data = other_data[:15000]
-    cross_other_labels = other_labels[:15000]
-    #neighbors =  [1,2,3,4,5,6,7,8,9,10,15,20,50]
-    neighbors =  [1,2,3]
-    FAR, FRR, FAR_avg, FRR_avg = cross_validation(cross_correct_data, cross_correct_labels, cross_other_data, cross_other_labels, neighbors, 3)
+    test_data = np.concatenate((correct_data[args.train_correct:], other_data[args.train_other:]))
+    test_labels = np.concatenate((correct_labels[args.train_correct:], other_labels[args.train_other:]))
+    
+    cross_data = np.concatenate((correct_data[:args.train_correct], other_data[:args.train_other]))
+    cross_labels = np.concatenate((correct_labels[:args.train_correct], other_labels[:args.train_other]))
+    cross_data, cross_labels = shuffle(cross_data, cross_labels)
+    
+    neighbors =  [1,2,3,4,5,6,7,8,9,10,15,20,50]
+    FAR, FRR, FAR_avg, FRR_avg = cross_validation(cross_data, cross_labels, neighbors, 3)
 
     plt.plot(neighbors, FRR_avg, label="FRR")
     plt.plot(neighbors, FAR_avg, label="FAR")
@@ -109,10 +111,12 @@ if args.m==0: #Cross validation with knn
     plt.show()
 
 elif args.m==1: #MLP anomaly detection
-    Train_data = np.concatenate((correct_data[:300], other_data[:15000]))
-    Train_labels = np.concatenate((correct_labels[:300], other_labels[:15000]))
-    Valid_data = np.concatenate((correct_data[300:], other_data[15000:]))
-    Valid_labels = np.concatenate((correct_labels[300:], other_labels[15000:]))
+    correct_data, correct_labels = shuffle(correct_data, correct_labels)
+    other_data, other_labels = shuffle(other_data, other_labels)
+    Train_data = np.concatenate((correct_data[:args.train_correct], other_data[:args.train_other]))
+    Train_labels = np.concatenate((correct_labels[:args.train_correct], other_labels[:args.train_other]))
+    Valid_data = np.concatenate((correct_data[args.train_correct:], other_data[args.train_other:]))
+    Valid_labels = np.concatenate((correct_labels[args.train_correct:], other_labels[args.train_other:]))
 
     batch_size=100;
     train_data, train_labels, valid_data, valid_labels=prepare_for_backprop(batch_size, Train_data, Train_labels, Valid_data, Valid_labels)
