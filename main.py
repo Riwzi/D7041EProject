@@ -111,7 +111,7 @@ elif args.m==1: #MLP anomaly detection
 
     batch_size=100;
     train_data, train_labels, valid_data, valid_labels=prepare_for_backprop(batch_size, Train_data, Train_labels, Valid_data, Valid_labels)
-    
+
     mlp = MultiLayerPerceptron(layer_config=[31, 100, 100, 2], batch_size=batch_size)
 
     mlp.evaluate(train_data, train_labels, valid_data, valid_labels, eval_train=True)
@@ -119,9 +119,27 @@ elif args.m==1: #MLP anomaly detection
     print("Done:)\n")
 
 elif args.m==2: #Replicator neural net
-    #setup stuffs for replicator neural nets here.
-    pass
-    
-    
+    batch_size=100;
+    batched_data, batched_labels = util.create_batches(data, labels, batch_size,
+                                                       create_bit_vector=True)
+    rnn = ReplicatorNeuralNet(layer_config=[31, 15, 15, 15, 31], batch_size=batch_size)
+    loss = rnn.train(train_data)
+
+    plt.plot(loss)
+    plt.xlabel("epoch")
+    plt.ylabel("reconstruction loss")
+    plt.title("Replicator neural network training")
+    plt.show()
+
+    # TODO use more data for evaluation?
+    thresholds, far, frr = rnn.evaluate_outlier_thresholds(data, labels)
+    # TODO make the plot nicer
+    plt.plot(thresholds, far, 'x')
+    plt.plot(thresholds, frr, '.')
+    plt.xlabel("threshold")
+    plt.ylabel("rate")
+    plt.title("Replicator neural network FAR/FRR")
+    plt.show()
+
 else:
     pass
