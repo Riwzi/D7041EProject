@@ -237,9 +237,10 @@ class ReplicatorNeuralNet(MultiLayerPerceptron):
         print "{} negative examples".format(negative_examples)
         fa = negative_examples # number of false acceptances
         fr = 0                 # number of false rejections
-        threshold = []
-        far = []
-        frr = []
+        threshold_list = []
+        far_list = []
+        frr_list = []
+        first_time = True
         for i in outlier_indices:
             # label is 1 if it is the original user, 0 otherwise
             if labels[i] == 1:
@@ -247,12 +248,18 @@ class ReplicatorNeuralNet(MultiLayerPerceptron):
                 fr += 1
             else:
                 fa -= 1
-            if fr == fa:
-                print "equal errors when threshold is {}\nfar=frr={}".format(outlier_factor[i], fa / float(negative_examples))
-            threshold.append(outlier_factor[i])
-            far.append(fa / float(negative_examples))
-            frr.append(fr / float(positive_examples))
-        return (threshold, far, frr)
+            far = fa / float(negative_examples)
+            frr = fr / float(positive_examples)
+            if first_time and frr >= far:
+                first_time = False
+                print ("equal errors when threshold is {0}\n"
+                       "before: far={1}, frr={2}\n"
+                       "after: far={3}, frr={4}").format(outlier_factor[i],
+                       far_list[-1], frr_list[-1], far, frr)
+            threshold_list.append(outlier_factor[i])
+            far_list.append(far)
+            frr_list.append(frr)
+        return (threshold_list, far_list, frr_list)
 
     def find_outliers(self, net_input, net_output=None):
         if net_output == None:
