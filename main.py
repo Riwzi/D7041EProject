@@ -107,7 +107,7 @@ if args.m==0: #Cross validation with knn
     plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     plt.ylabel("False Acceptance/Rejectance rate")
     plt.xlabel("k")
-    plt.title("k-Nearest Neighbors")
+    plt.title("k-Nearest Neighbors, on subject {}".format(args.subject))
     plt.show()
       
     nn=NearestNeighborClass()
