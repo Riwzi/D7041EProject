@@ -101,7 +101,7 @@ if args.m==0: #Cross validation with knn
     
     neighbors =  [1,2,3,4,5,6,7,8,9,10,15,20,50]
     FAR, FRR, FAR_avg, FRR_avg = cross_validation(cross_data, cross_labels, neighbors, 3)
-
+ 
     plt.plot(neighbors, FRR_avg, label="FRR")
     plt.plot(neighbors, FAR_avg, label="FAR")
     plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
@@ -109,6 +109,16 @@ if args.m==0: #Cross validation with knn
     plt.xlabel("k")
     plt.title("k-Nearest Neighbors")
     plt.show()
+      
+    nn=NearestNeighborClass()
+    nn.train(cross_data, cross_labels)
+    FA, FR = nn.predict(test_data, test_labels, 1)
+    number_correct = np.count_nonzero(test_labels)
+    number_incorrect = len(test_labels) - number_correct
+    FAR = float(FA)/number_incorrect
+    FRR = float(FR)/number_correct
+    print FAR
+    print FRR
 
 elif args.m==1: #MLP anomaly detection
     correct_data, correct_labels = shuffle(correct_data, correct_labels)
