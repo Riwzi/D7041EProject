@@ -193,6 +193,8 @@ class ReplicatorNeuralNet(MultiLayerPerceptron):
         assert(layer_config[0] == layer_config[-1])
         super(ReplicatorNeuralNet, self).__init__(layer_config, batch_size)
         self.layers[1].activation = f_tanh
+        # staircase is hard to train using backpropagation, some suggest
+        # a ramp or sigmoid as an alternative with similar results
         self.layers[2].activation = f_staircase
         self.layers[3].activation = f_tanh
         # article uses either linear or sigmoid for output layer
@@ -222,7 +224,7 @@ class ReplicatorNeuralNet(MultiLayerPerceptron):
         # half square euclidean distance is used for reconstruction loss
         return np.sum(np.square(net_output - net_input), axis=1)/2
 
-    def evaluate_outlier_thresholds(self, data, labels):
+    def choose_outlier_threshold(self, data, labels):
         output = self.forward_propagate(data)
         outlier_factor = self.reconstruction_loss(data, output)
         assert(len(outlier_factor.shape) == 1)
@@ -252,18 +254,33 @@ class ReplicatorNeuralNet(MultiLayerPerceptron):
             frr = fr / float(positive_examples)
             if first_time and frr >= far:
                 first_time = False
+                eer_threshold = outlier_factor[i]
+                self.outlier_threshold = eer_threshold
                 print ("equal errors when threshold is {0}\n"
                        "before: far={1}, frr={2}\n"
-                       "after: far={3}, frr={4}").format(outlier_factor[i],
+                       "after: far={3}, frr={4}").format(eer_threshold,
                        far_list[-1], frr_list[-1], far, frr)
             threshold_list.append(outlier_factor[i])
             far_list.append(far)
             frr_list.append(frr)
         return (threshold_list, far_list, frr_list)
 
-    def find_outliers(self, net_input, net_output=None):
-        if net_output == None:
-            net_output = self.forward_propagate(net_input)
+    def evaluate_error_rates(self, data, labels):
+        predictions = self.find_outliers(data)
+        results = predictions - labels
+        # prediction 1, label 0 is a false acceptance
+        fa = np.sum(np.where(results == 1, 1, 0))
+        # prediction 0, label 1 is a false rejection
+        fr = np.sum(np.where(results == -1, 1, 0))
+        positive_examples = np.sum(labels)
+        negative_examples = labels.shape[0] - positive_examples
+        far = fa / float(negative_examples)
+        frr = fr / float(positive_examples)
+        return (far, frr)
+
+    def find_outliers(self, net_input):
+        net_output = self.forward_propagate(net_input)
         outlier_factor = self.reconstruction_loss(net_input, net_output)
-        outliers = np.where(outlier_factor > self.outlier_threshold, 1, 0)
-        return outliers
+        # 1 for non-outliers, 0 for outliers
+        predictions = np.where(outlier_factor < self.outlier_threshold, 1, 0)
+        return predictions

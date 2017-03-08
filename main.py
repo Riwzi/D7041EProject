@@ -146,21 +146,25 @@ elif args.m==2: #Replicator neural net
     batch_size=100;
     batch_train_data, batch_train_labels = util.create_batches(train_data, train_labels, batch_size, create_bit_vector=True)
     rnn = ReplicatorNeuralNet(layer_config=[31, 15, 15, 15, 31], batch_size=batch_size)
-    loss = rnn.train(batch_train_data, epochs=70, learning_rate=0.01)
+    loss = rnn.train(batch_train_data, epochs=70, learning_rate=0.0003)
 
-    plt.plot(loss, '.')
+    thresholds, far, frr = rnn.choose_outlier_thresholds(valid_data, valid_labels)
+
+    plt.plot(loss)
     plt.xlabel("epoch")
     plt.ylabel("reconstruction loss")
-    plt.title("Replicator neural network training")
+    plt.title("Replicator neural network training on subject {}".format(args.subject))
     plt.show()
 
-    thresholds, far, frr = rnn.evaluate_outlier_thresholds(valid_data, valid_labels)
     # TODO make the plot nicer
     plt.plot(thresholds, far, label='FAR')
     plt.plot(thresholds, frr, label='FRR')
     plt.xlabel("threshold")
     plt.ylabel("rate")
-    plt.title("Replicator neural network FAR/FRR")
+    plt.title("Replicator neural network FAR/FRR on subject {}".format(args.subject))
     plt.show()
+
+    # would need to use fresh data for this
+    # actual_far, actual_frr = rnn.evaluate_error_rates(some_data, some_labels)
 else:
     pass
