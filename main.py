@@ -162,6 +162,7 @@ elif args.m==2: #Replicator neural net
     plt.xlabel("threshold")
     plt.ylabel("rate")
     plt.title("Replicator neural network FAR/FRR on subject {}".format(args.subject))
+    plt.legend(loc='upper right')
     plt.show()
 
     # would need to use fresh data for this
