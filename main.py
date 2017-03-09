@@ -98,14 +98,14 @@ if args.m==0: #Cross validation with knn
     cross_data = np.concatenate((correct_data[:args.train_correct], other_data[:args.train_other]))
     cross_labels = np.concatenate((correct_labels[:args.train_correct], other_labels[:args.train_other]))
     cross_data, cross_labels = shuffle(cross_data, cross_labels)
-    
-    neighbors =  [1,2,3,4,5,6,7,8,9,10,15,20,50]
+     
+    neighbors = [1,2,3,4,5,6,7,8,9,10,15,20,50]
     FAR, FRR, FAR_avg, FRR_avg = cross_validation(cross_data, cross_labels, neighbors, 3)
- 
+  
     plt.plot(neighbors, FRR_avg, label="FRR")
     plt.plot(neighbors, FAR_avg, label="FAR")
-    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-    plt.ylabel("False Acceptance/Rejectance rate")
+    plt.legend(loc='upper right')
+    plt.ylabel("False Acceptance/Rejection rate")
     plt.xlabel("k")
     plt.title("k-Nearest Neighbors, on subject {}".format(args.subject))
     plt.show()
