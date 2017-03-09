@@ -94,11 +94,11 @@ def prepare_for_backprop(batch_size, Train_data, Train_labels, Valid_data, Valid
 if args.m==0: #Cross validation with knn
     test_data = np.concatenate((correct_data[args.train_correct:], other_data[args.train_other:]))
     test_labels = np.concatenate((correct_labels[args.train_correct:], other_labels[args.train_other:]))
-    
+
     cross_data = np.concatenate((correct_data[:args.train_correct], other_data[:args.train_other]))
     cross_labels = np.concatenate((correct_labels[:args.train_correct], other_labels[:args.train_other]))
     cross_data, cross_labels = shuffle(cross_data, cross_labels)
-     
+    
     neighbors = [1,2,3,4,5,6,7,8,9,10,15,20,50]
     FAR, FRR, FAR_avg, FRR_avg = cross_validation(cross_data, cross_labels, neighbors, 3)
   
@@ -109,7 +109,7 @@ if args.m==0: #Cross validation with knn
     plt.xlabel("k")
     plt.title("k-Nearest Neighbors, on subject {}".format(args.subject))
     plt.show()
-      
+
     nn=NearestNeighborClass()
     nn.train(cross_data, cross_labels)
     FA, FR = nn.predict(test_data, test_labels, 1)
@@ -148,7 +148,7 @@ elif args.m==2: #Replicator neural net
     rnn = ReplicatorNeuralNet(layer_config=[31, 15, 15, 15, 31], batch_size=batch_size)
     loss = rnn.train(batch_train_data, epochs=70, learning_rate=0.0003)
 
-    thresholds, far, frr = rnn.choose_outlier_thresholds(valid_data, valid_labels)
+    thresholds, far, frr = rnn.choose_outlier_threshold(valid_data, valid_labels)
 
     plt.plot(loss)
     plt.xlabel("epoch")
@@ -162,6 +162,7 @@ elif args.m==2: #Replicator neural net
     plt.xlabel("threshold")
     plt.ylabel("rate")
     plt.title("Replicator neural network FAR/FRR on subject {}".format(args.subject))
+    plt.legend(loc='upper right')
     plt.show()
 
     # would need to use fresh data for this
